@@ -1,0 +1,231 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Surveys app with separate Lambda function references in shared source files
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.11
+    MemorySize: 128
+
+Outputs:
+  ApiUrl:
+    Description: "HTTP API Endpoint"
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  TableName:
+    Value: !Ref SurveysMainTable
+
+Resources:
+  # The core top-level configuration for our HTTP API
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: SurveysApi
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowOrigins:
+          - "*"
+  # Our DynamoDB Table
+  SurveysMainTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # Add the TTL Specification for the table
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      TableName: surveysMain
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: sk-pk-index
+          KeySchema:
+            - AttributeName: sk
+              KeyType: HASH
+            - AttributeName: pk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 2
+            WriteCapacityUnits: 2
+
+  # All of the configuration for the Customers endpoints
+  CustomersCreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: customers.create
+      Events:
+        CreateCustomer:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /customers
+            Method: POST
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SurveysMainTable
+
+  CustomersGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: customers.get
+      Events:
+        GetCustomer:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /customers/{id}
+            Method: GET
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SurveysMainTable
+
+  # All of the configuration for the Surveys endpoints
+  SurveysCreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: surveys.create
+      Events:
+        CreateSurvey:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /surveys
+            Method: POST
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SurveysMainTable
+
+  SurveysGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: surveys.get
+      Events:
+        GetSurvey:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /surveys/{id}
+            Method: GET
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SurveysMainTable
+
+  SurveysGetAllFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: surveys.get_all
+      Events:
+        GetAllSurveys:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /customers/{id}/surveys
+            Method: GET
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SurveysMainTable
+
+  # All of the configuration for the Responses endpoints
+  ResponsesCreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: responses.create
+      Events:
+        CreateResponse:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /responses
+            Method: POST
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SurveysMainTable
+
+  ResponsesGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: responses.get
+      Events:
+        GetResponse:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /responses/{id}
+            Method: GET
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SurveysMainTable
+
+  ResponsesGetAllFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/handlers/
+      Handler: responses.get_all
+      Events:
+        GetAllResponses:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            PayloadFormatVersion: "2.0"
+            Path: /surveys/{id}/responses
+            Method: GET
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref SurveysMainTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SurveysMainTable

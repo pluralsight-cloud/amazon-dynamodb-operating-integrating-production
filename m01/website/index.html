@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Survey Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .nav-tabs .nav-link.active {
+      background-color: #0d6efd;
+      color: #fff;
+    }
+    .tab-content {
+      padding-top: 1rem;
+    }
+    .question-input {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <h1 class="mb-4">Survey Platform</h1>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs" id="surveyTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button" role="tab">Create a Survey</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="fill-tab" data-bs-toggle="tab" data-bs-target="#fill" type="button" role="tab">Fill Out a Survey</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="view-tab" data-bs-toggle="tab" data-bs-target="#view" type="button" role="tab">View Survey Results</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="api-tab" data-bs-toggle="tab" data-bs-target="#api-demo" type="button" role="tab">API Demo</button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Create Survey Tab -->
+      <div class="tab-pane fade show active" id="create" role="tabpanel">
+        <div class="card mt-3">
+          <div class="card-body">
+            <h4>Create Survey</h4>
+            <input class="form-control mb-2" id="create-cust-id" placeholder="Customer ID">
+            <input class="form-control mb-2" id="survey-title" placeholder="Survey Title">
+            <div id="question-container"></div>
+            <button class="btn btn-secondary mb-2" onclick="addQuestion()">Add Question</button>
+            <button class="btn btn-primary mb-2" onclick="submitSurvey()">Create Survey</button>
+            <pre id="create-survey-output"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fill Out Survey Tab -->
+      <div class="tab-pane fade" id="fill" role="tabpanel">
+        <div class="card mt-3">
+          <div class="card-body">
+            <h4>Fill Out Survey</h4>
+            <input class="form-control mb-3" id="fill-survey-id" placeholder="Survey ID">
+            <form id="fill-form"></form>
+            <button class="btn btn-success mt-2" onclick="loadSurveyQuestions()">Load Survey</button>
+            <button class="btn btn-success mt-2" onclick="submitResponse()">Submit Response</button>
+            <pre id="response-submit-output"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- View Survey Results Tab -->
+      <div class="tab-pane fade" id="view" role="tabpanel">
+        <div class="card mt-3">
+          <div class="card-body">
+            <h4>View Survey Responses</h4>
+            <input class="form-control mb-2" id="view-survey-id" placeholder="Survey ID">
+            <button class="btn btn-info" onclick="getResponses()">Get Responses</button>
+            <pre id="view-responses-output"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Demo Tab -->
+      <div class="tab-pane fade" id="api-demo" role="tabpanel">
+        <div class="card mt-3">
+          <div class="container py-5">
+            <h1 class="mb-4">Survey API Demo</h1>
+        
+            <!-- Create Customer -->
+            <div class="card">
+              <div class="card-header">Create Customer</div>
+              <div class="card-body">
+                <input class="form-control mb-2" id="cust-id" placeholder="Customer ID (e.g., 12345)">
+                <input class="form-control mb-2" id="cust-name" placeholder="Customer Name">
+                <input class="form-control mb-3" id="cust-email" placeholder="Customer Email">
+                <button class="btn btn-primary mb-3" onclick="createCustomer()">Create</button>
+                <pre id="cust-output"></pre>
+              </div>
+            </div>
+        
+            <!-- Create Survey -->
+            <div class="card">
+              <div class="card-header">Create Survey</div>
+              <div class="card-body">
+                <input class="form-control mb-2" id="survey-cust-id" placeholder="Customer ID">
+                <textarea class="form-control mb-3" id="survey-data" rows="3" placeholder='Survey JSON (e.g., {"title":"Feedback","questions":["Q1?","Q2?"]})'></textarea>
+                <button class="btn btn-success mb-3" onclick="createSurvey()">Create Survey</button>
+                <pre id="survey-output"></pre>
+              </div>
+            </div>
+        
+            <!-- Create Response -->
+            <div class="card">
+              <div class="card-header">Create Response</div>
+              <div class="card-body">
+                <input class="form-control mb-2" id="response-survey-id" placeholder="Survey ID">
+                <textarea class="form-control mb-3" id="response-data" rows="3" placeholder='Response JSON (e.g., {"question_1":"Yes","question_2":"No"})'></textarea>
+                <button class="btn btn-warning mb-3" onclick="createResponse()">Create Response</button>
+                <pre id="response-output"></pre>
+              </div>
+            </div>
+        
+            <!-- Get All Surveys -->
+            <div class="card">
+              <div class="card-header">Get Surveys for a Customer</div>
+              <div class="card-body">
+                <input class="form-control mb-3" id="get-cust-id" placeholder="Customer ID">
+                <button class="btn btn-info mb-3" onclick="getSurveys()">Get Surveys</button>
+                <pre id="get-surveys-output"></pre>
+              </div>
+            </div>
+        
+            <!-- Get All Responses -->
+            <div class="card">
+              <div class="card-header">Get Responses for a Survey</div>
+              <div class="card-body">
+                <input class="form-control mb-3" id="get-survey-id" placeholder="Survey ID">
+                <button class="btn btn-dark mb-3" onclick="getResponsesApiPage()">Get Responses</button>
+                <pre id="get-responses-output"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const API_BASE = "https://wkih9npz52.execute-api.us-east-1.amazonaws.com";
+
+    function addQuestion() {
+      const container = document.getElementById("question-container");
+      const input = document.createElement("input");
+      input.className = "form-control question-input";
+      input.placeholder = "Enter a question";
+      container.appendChild(input);
+    }
+
+    async function submitSurvey() {
+      const custId = document.getElementById("create-cust-id").value;
+      const title = document.getElementById("survey-title").value;
+      const questionInputs = document.querySelectorAll(".question-input");
+      const questions = Array.from(questionInputs).map(input => input.value).filter(q => q.trim() !== "");
+
+      const payload = {
+        customer_id: custId,
+        survey_data: { title, questions }
+      };
+
+      const res = await fetch(`${API_BASE}/surveys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      document.getElementById("create-survey-output").textContent = await res.text();
+    }
+
+    async function loadSurveyQuestions() {
+      const id = document.getElementById("fill-survey-id").value;
+      const res = await fetch(`${API_BASE}/surveys/${id}`);
+      const data = await res.json();
+
+      const form = document.getElementById("fill-form");
+      form.innerHTML = "";
+
+      if (data && data.survey_data && data.survey_data.questions) {
+        data.survey_data.questions.forEach((q, idx) => {
+          const label = document.createElement("label");
+          label.textContent = q;
+          label.className = "form-label mt-2";
+          const input = document.createElement("input");
+          input.className = "form-control";
+          input.name = `question_${idx + 1}`;
+          form.appendChild(label);
+          form.appendChild(input);
+        });
+      }
+    }
+
+    async function submitResponse() {
+      const id = document.getElementById("fill-survey-id").value;
+      const form = document.getElementById("fill-form");
+      const inputs = form.querySelectorAll("input");
+      const response_data = {};
+      inputs.forEach(input => response_data[input.name] = input.value);
+
+      const res = await fetch(`${API_BASE}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ survey_id: id, response_data })
+      });
+      document.getElementById("response-submit-output").textContent = await res.text();
+    }
+
+    async function getResponses() {
+      const id = document.getElementById("view-survey-id").value;
+      const res = await fetch(`${API_BASE}/surveys/${id}/responses`);
+      document.getElementById("view-responses-output").textContent = await res.text();
+    }
+
+    async function createCustomer() {
+      const id = document.getElementById("cust-id").value;
+      const name = document.getElementById("cust-name").value;
+      const email = document.getElementById("cust-email").value;
+      const res = await fetch(`${API_BASE}/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customer_id: id, profile_data: { name, email } })
+      });
+      document.getElementById("cust-output").textContent = await res.text();
+    }
+
+    async function createSurvey() {
+      const id = document.getElementById("survey-cust-id").value;
+      const data = document.getElementById("survey-data").value;
+      try {
+        const json = JSON.parse(data);
+        const res = await fetch(`${API_BASE}/surveys`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ customer_id: id, survey_data: json })
+        });
+        document.getElementById("survey-output").textContent = await res.text();
+      } catch (e) {
+        alert("Invalid JSON in survey data");
+      }
+    }
+
+    async function createResponse() {
+      const id = document.getElementById("response-survey-id").value;
+      const data = document.getElementById("response-data").value;
+      try {
+        const json = JSON.parse(data);
+        const res = await fetch(`${API_BASE}/responses`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ survey_id: id, response_data: json })
+        });
+        document.getElementById("response-output").textContent = await res.text();
+      } catch (e) {
+        alert("Invalid JSON in response data");
+      }
+    }
+
+    async function getSurveys() {
+      const id = document.getElementById("get-cust-id").value;
+      const res = await fetch(`${API_BASE}/customers/${id}/surveys`);
+      document.getElementById("get-surveys-output").textContent = await res.text();
+    }
+
+    async function getResponsesApiPage() {
+      const id = document.getElementById("get-survey-id").value;
+      const res = await fetch(`${API_BASE}/surveys/${id}/responses`);
+      document.getElementById("get-responses-output").textContent = await res.text();
+    }
+  </script>
+</body>
+</html>
