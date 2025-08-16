@@ -32,9 +32,10 @@ def create(event, context):
 def get(event, context):
     survey_id = event['pathParameters']['id']
     index_pk = Key('sk').eq('SURVEY#' + survey_id)
+    index_sk = Key('pk').begins_with('CUSTOMER#')
     response = table.query(
         IndexName='sk-pk-index',
-        KeyConditionExpression=index_pk
+        KeyConditionExpression=index_pk & index_sk 
     )
     return {
         "statusCode": 200,
